@@ -1,1 +1,12 @@
 @import "tailwindcss";
+@tailwind utilities;
+@plugin "daisyui";
+:root {
+  --primary: #6D28D9;
+  --secondary: #8B5CF6;
+  --accent: #A78BFA;
+  --dark: #0F0A1F;
+  --card: #1A1333;
+  --text: #FFFFFF;
+  --muted: #BDB4E5;
+}

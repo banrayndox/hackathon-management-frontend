@@ -1,13 +1,89 @@
-import React from 'react'
+import React from 'react';
+import { Route, Routes } from 'react-router-dom';
+import Footer from './components/Footer.jsx';
+import Home from './pages/Home.jsx';
+import Landing from './layout/Landing.jsx';
+
+// নতুন ইমপোর্ট
+import Login from './pages/Login.jsx';
+import Callback from './pages/Callback.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
+
+import TeamsList from './pages/TeamList.jsx';
+import TeamListLanding from './layout/TeamListLanding.jsx';
+import LeaderBoardLanding from './layout/LeaderBoardLanding.jsx';
+import TeamProfileLanding from './layout/TeamProfileLanding.jsx';
+import ProfileLanding from './layout/ProfileLanding.jsx';
+import JudgesListLanding from './layout/JudgeListLanding.jsx';
+import AdminDashboardLanding from './layout/AdminDashboardLanding.jsx';
+import JudgeDashboardLanding from './layout/JudgeDashboardLanding.jsx';
+import ParticipantsDashboardLanding from './layout/ParticipantsDashboardLanding.jsx';
+import PaymentConfirmationLanding from './layout/PaymentConfirmationLanding.jsx';
 
 const App = () => {
   return (
- <div className="h-screen flex items-center justify-center bg-gray-100">
-      <h1 className="text-5xl font-bold text-blue-600">
-        Hello Tailwind!
-      </h1>
-    </div>
-  )
-}
+    <Routes>
+      {/* পাবলিক রাউট */}
+      <Route path="/" element={<Landing />} />
+      <Route path="/judgeslist" element={<JudgesListLanding />} />
+      <Route path="/teamlist" element={<TeamListLanding />} />
+      <Route path="/leaderboard" element={<LeaderBoardLanding />} />
+      <Route path="/team-profile/:id" element={<TeamProfileLanding />} />
 
-export default App
+      {/* লগইন ও কলব্যাক (পাবলিক) */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/auth/callback" element={<Callback />} />
+
+      {/* প্রোটেক্টেড রাউট – শুধু লগইন করা ইউজার দেখতে পাবে */}
+      <Route
+        path="/profile/:id"
+        element={
+          <ProtectedRoute>
+            <ProfileLanding />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* রোল বেইজড প্রোটেক্টেড রাউট – শুধু নির্দিষ্ট রোল অ্যাক্সেস পাবে */}
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <AdminDashboardLanding />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/judge/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={['judge']}>
+            <JudgeDashboardLanding />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/participants/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={['participant']}>
+            <ParticipantsDashboardLanding />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/participants/payment"
+        element={
+          <ProtectedRoute allowedRoles={['participant']}>
+            <PaymentConfirmationLanding />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* 404 – ল্যান্ডিং পেজে রিডিরেক্ট */}
+      <Route path="*" element={<Landing />} />
+    </Routes>
+  );
+};
+
+export default App;
+
+
