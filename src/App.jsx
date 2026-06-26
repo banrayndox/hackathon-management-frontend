@@ -31,7 +31,6 @@ const App = () => {
       <Route path="/team-profile/:id" element={<TeamProfileLanding />} />
 
       {/* লগইন ও কলব্যাক (পাবলিক) */}
-      <Route path="/login" element={<Login />} />
       <Route path="/auth/callback" element={<Callback />} />
 
       {/* প্রোটেক্টেড রাউট – শুধু লগইন করা ইউজার দেখতে পাবে */}
