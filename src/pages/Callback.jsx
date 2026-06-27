@@ -12,15 +12,15 @@ const Callback = () => {
     if (token) {
       localStorage.setItem('token', token);
       console.log('✅ Token saved from callback');
-      // পুরো পেজ রিলোড -> Navbar আবার fetch করবে
+      navigate('/');
       window.location.href = '/';
     } else {
       console.error('❌ No token in callback URL');
-      navigate('/login?error=no_token');
+      navigate('/');
     }
   }, [location, navigate]);
 
-  return <div className="text-white text-center mt-20">Logging in...</div>;
+  return <div className="text-white text-center mt-20">...</div>;
 };
 
 export default Callback;
