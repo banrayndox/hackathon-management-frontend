@@ -1,39 +1,49 @@
-// src/context/AuthContext.jsx
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import API from '../api/axios';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    // ইনিশিয়ালি লোকাল স্টোরেজে ইউজার থাকলে তা সেট করে নেওয়া (ফাস্ট লোড)
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [loading, setLoading] = useState(true);
 
   // প্রোফাইল ফেচ (টোকেন সহ)
   const fetchUserProfile = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
+      setUser(null);
+      localStorage.removeItem('user');
       setLoading(false);
       return null;
     }
 
     try {
+      setLoading(true);
       const res = await API.get('/api/auth/me', {
         headers: { Authorization: `Bearer ${token}` }
       });
       console.log('📥 fetchUserProfile success:', res.data);
+      
       setUser(res.data);
       localStorage.setItem('user', JSON.stringify(res.data));
       return res.data;
     } catch (error) {
       console.error('❌ fetchUserProfile error:', error);
-      logout();
-      throw error;
+      // টোকেন ইনভ্যালিড বা এক্সপায়ারড হলে ক্লিনআপ করা
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }
   };
 
-  // ইনিশিয়ালাইজেশন – প্রতি রিফ্রেশে/মাউন্টে কল হবে
+  // ইনিশিয়ালাইজেশন – অ্যাপ প্রথমবার লোড হলে কল হবে
   useEffect(() => {
     fetchUserProfile();
   }, []);
@@ -54,36 +64,37 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       setUser(null);
-        window.location.href = '/';
+      window.location.href = '/';
     }
   };
 
-  // লগইন রিডাইরেক্ট
+  // লগইন রিডাইরেক্ট (গুগল ওঅথ)
   const loginRedirect = () => {
     window.location.href = `${import.meta.env.VITE_APP_BACKEND_URL}/api/auth/google`;
-  };
-
-  // লগইন (টোকেন দিয়ে) – যদি প্রয়োজন হয়
-  const login = async (token) => {
-    // ... আপনার কোড (যদি প্রয়োজন)
   };
 
   const value = {
     user,
     loading,
-    login,
     logout,
     fetchUserProfile,
     loginRedirect,
   };
 
+  // স্পিনার লজিক ফিক্স: অ্যাপ লোড আটকে রাখবে না যদি টোকেন না থাকে
+  // এর ফলে /auth/callback পেজটি কোনো বাধা ছাড়াই লোড হতে পারবে
+  const tokenExists = !!localStorage.getItem('token');
+  if (loading && tokenExists) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0B0614] text-white">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
   return (
     <AuthContext.Provider value={value}>
-      {!loading ? children : (
-        <div className="min-h-screen flex items-center justify-center bg-[#0B0614] text-white">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500"></div>
-        </div>
-      )}
+      {children}
     </AuthContext.Provider>
   );
 };
