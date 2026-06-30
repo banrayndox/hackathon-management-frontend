@@ -4,11 +4,12 @@ import App from './App.jsx'
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from './context/AuthContext.jsx';
 import { Toaster } from 'react-hot-toast';
-
+import UnderDevelopment from './components/UnderDevelopment.jsx';
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
     <AuthProvider>
-      <App />
+      {/* <App /> */}
+          <UnderDevelopment />
       <Toaster
         position="top-right"
         toastOptions={{
