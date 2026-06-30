@@ -8,8 +8,8 @@ import UnderDevelopment from './components/UnderDevelopment.jsx';
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
     <AuthProvider>
-      {/* <App /> */}
-          <UnderDevelopment />
+      <App />
+          {/* <UnderDevelopment /> */}
       <Toaster
         position="top-right"
         toastOptions={{

@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import API from "../api/axios";
 import { FaGithub, FaLink, FaFolderOpen } from "react-icons/fa";
-
+import { useAuth } from "../context/AuthContext";
 export default function TeamProfilePage() {
   const { id } = useParams();
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
+  const {user} = useAuth()
+  const isAdmin = user?.role === "admin"
 
   useEffect(() => {
     const fetchTeamDetails = async () => {
@@ -56,7 +58,7 @@ export default function TeamProfilePage() {
       <div className="relative w-full max-w-3xl bg-white/[0.02] border border-white/[0.08] rounded-2xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl shadow-black/40">
         
         {/* HEADER SECTION */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pb-6 border-b border-white/[0.06]">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
               {team.name}
@@ -73,7 +75,7 @@ export default function TeamProfilePage() {
                 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                 : "bg-amber-500/10 text-amber-300 border-amber-500/20"
             }`}>
-              ● {team.paid ? "Approved" : "Pending"}
+              ● Verification {team.paid ? "Approved" : "Pending"}
             </span>
             {isJudged && (
               <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold tracking-wide bg-amber-500/10 text-amber-300 border border-amber-500/20 shadow-sm shadow-amber-500/5">
@@ -84,7 +86,9 @@ export default function TeamProfilePage() {
         </div>
 
         {/* PROJECT DETAILS (Only if submitted) */}
-        {team.submitted ? (
+     {isAdmin && ( 
+      <>
+       { team.submitted ? (
           <div className="mt-8 space-y-4">
             <h3 className="text-xs font-semibold text-slate-400 tracking-wider uppercase">
               Project Description
@@ -150,15 +154,17 @@ export default function TeamProfilePage() {
             No project details submitted by this team yet.
           </div>
         )}
+        </> )}
 
         {/* TEAM MEMBERS GRID */}
         <div className="mt-8 pt-6 border-t border-white/[0.06]">
           <h3 className="text-xs font-semibold text-slate-400 tracking-wider uppercase mb-4">
-            Team Roster ({team.members?.length || 0})
+            Team Member ({team.members?.length || 0})
           </h3>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {team.members?.map((member) => {
+           
               const isLeader = team.leader?._id === member._id || team.leader === member._id;
               return (
                 <div
@@ -172,11 +178,11 @@ export default function TeamProfilePage() {
                   {/* Avatar Container */}
                   <div className="relative flex-shrink-0">
                     <img
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.name}`}
-                      alt={member.name}
+                      src={`${member.profilePicture}`}
+                      alt={member.profilePictureture}
                       className="w-12 h-12 rounded-full bg-slate-800 object-cover border border-white/10 group-hover:scale-105 transition-transform duration-300"
                     />
-                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-[#090411] rounded-full" />
+                    
                   </div>
 
                   {/* Member Details */}
@@ -210,12 +216,30 @@ export default function TeamProfilePage() {
           {/* Assigned Judge Info */}
           {team.assignedJudge ? (
             <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.01] border border-white/[0.04]">
-                <div className="text-slate-400 text-xs">Assigned Judge:</div>
-                <span className="text-sm font-semibold text-purple-300 flex items-center gap-1">
-                  {team.assignedJudge.name || "Assigned Panelist"}
+             <div className="flex flex-col gap-1.5">
+          <div className="text-slate-400 text-xs">Assigned Judge:</div>
+  
+              <div className="flex items-center gap-2">
+                {/* প্রোফাইল পিকচার সেকশন */}
+                {team.assignedJudge?.profilePicture ? (
+                  <img
+                    src={team.assignedJudge.profilePicture}
+                    alt={team.assignedJudge.name || "Judge"}
+                    className="w-7 h-7 rounded-full object-cover border border-purple-500/30"
+                  />
+                ) : (
+                  /* ডিফল্ট অ্যাভাটার আইকন (যদি ইমেজ না থাকে) */
+                  <div className="w-7 h-7 rounded-full bg-purple-950 border border-purple-500/30 flex items-center justify-center text-purple-300 text-xs font-bold">
+                    {team.assignedJudge?.name ? team.assignedJudge.name.charAt(0).toUpperCase() : "J"}
+                  </div>
+                )}
+
+                {/* জাজের নাম */}
+                <span className="text-sm font-semibold text-purple-300">
+                  {team.assignedJudge?.name || "Assigned Panelist"}
                 </span>
               </div>
+            </div>
 
               {/* Evaluated metrics */}
               {isJudged && (

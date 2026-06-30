@@ -5,6 +5,7 @@ import {
   FaTrashAlt, FaUserShield, FaUserMinus, FaSearch,
   FaEdit, FaTimes, FaExclamationTriangle
 } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import API from "../../api/axios";
 import toast from "react-hot-toast";
 
@@ -38,7 +39,7 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  console.log(teams)
   // Search & Filter States
   const [userSearch, setUserSearch] = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState("all");
@@ -513,7 +514,20 @@ const filteredTeams = teams.filter(team => {
                   {filteredTeams.map((team) => (
                     <tr key={team._id} className="group">
                       <td className="py-4">
-                        <div className="text-slate-200 font-semibold">{team.name}</div>
+                        <div className="text-slate-200 font-semibold">
+  <Link 
+    to={`/team-profile/${team._id}`} 
+    className="group inline-flex items-center gap-1 transition-colors duration-200 hover:text-blue-400"
+  >
+    {/* টিমের নাম */}
+    <span>{team.name}</span>
+    
+    {/* হভার করলে এই "See Profile" টেক্সট এবং তীরটি আলতো করে ভেসে উঠবে */}
+    <span className="text-xs font-normal text-slate-400 opacity-0 translate-x-[-4px] transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
+      (See Profile →)
+    </span>
+  </Link>
+</div>
                       </td>
                       <td className="py-4">
                         <div>

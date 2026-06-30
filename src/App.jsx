@@ -25,22 +25,28 @@ const App = () => {
     <Routes>
     
       <Route path="/" element={<Landing />} />
-      <Route path="/judgeslist" element={<JudgesListLanding />} />
+      <Route path="/judgeslist" element={<ProtectedRoute allowedRoles={['admin', 'judge', 'participant']}><JudgesListLanding /></ProtectedRoute>} />
       {/* <Route path="/teamlist" element={<TeamListLanding />} /> */}
-      <Route path="/leaderboard" element={<LeaderBoardLanding />} />
-      <Route path="/team-profile/:id" element={<TeamProfileLanding />} />
-
+      <Route path="/leaderboard" element={<ProtectedRoute allowedRoles={['admin', 'judge', 'participant']}><LeaderBoardLanding /></ProtectedRoute>} />
+      <Route 
+          path="/team-profile/:id" 
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'judge', 'participant']}>
+              <TeamProfileLanding />
+            </ProtectedRoute>
+          } 
+        />  
    
       <Route path="/auth/callback" element={<Callback />} />
 
-      <Route
+      {/* <Route
         path="/profile/:id"
         element={
           <ProtectedRoute>
             <ProfileLanding />
           </ProtectedRoute>
         }
-      />
+      /> */}
 
 
       <Route

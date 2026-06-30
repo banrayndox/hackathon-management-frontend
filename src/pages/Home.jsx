@@ -10,6 +10,7 @@ import {
  
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import PremiumPrizeSection from "../components/PremiumPrizeSection";
 
 export default function Home() {
   const { user, loginRedirect } = useAuth();
@@ -67,47 +68,37 @@ export default function Home() {
             </p>
 
         {/* CTA */}
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mt-10">
+      {/* CTA */}
+{/* এখানে w-full এবং items-center যোগ করা হয়েছে যেন মোবাইল স্ক্রিনে সবকিছু সেন্টারে থাকে */}
+<div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-10 w-full">
 
-        {/* PRIMARY CTA */}
-{/* ব্যবহারকারী লগইন না থাকলে (!isLoggedIn) এই বাটনটি দেখাবে */}
-{/* {!isLoggedIn ? (
-  <button 
-    onClick={loginRedirect}
-    className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 text-white font-semibold shadow-lg shadow-purple-900/40 hover:shadow-purple-500/50 transition transform hover:-translate-y-0.5"
+  {/* SECONDARY CTA */}
+  {/* Link ট্যাগে w-full sm:w-auto এবং flex justify-center দেওয়া হয়েছে */}
+  <Link 
+    to='https://drive.google.com/file/d/1mCZv8RE6YKEvrkX9XvWh-a34LvwUjNSY/view'
+    className="w-full sm:w-auto flex justify-center"
   >
-    <FaUserPlus /> Register Team
-  </button>
-) : (
-  <Link to={getDashboardLink()}>
-    <button className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 text-white font-semibold shadow-lg shadow-purple-900/40 hover:shadow-purple-500/50 transition transform hover:-translate-y-0.5">
-      Go to Dashboard
+    <button className="
+        flex items-center justify-center gap-2
+        w-full sm:w-auto /* মোবাইলে বাটনটি ফুল উইডথ হবে, বড় স্ক্রিনে কন্টেন্ট অনুযায়ী সাইজ নিবে */
+        px-6 py-3 rounded-xl
+        bg-purple-950/20 backdrop-blur-md
+        border border-white/10
+        text-purple-200 font-medium tracking-wide
+        shadow-[0_0_15px_rgba(168,85,247,0.1)]
+        
+        hover:bg-purple-500/20
+        hover:border-purple-400/40
+        hover:text-white
+        hover:shadow-[0_0_25px_rgba(168,85,247,0.35)]
+        
+        transition-all duration-300 ease-out 
+        active:scale-[0.98]
+    ">
+        <FaBook /> Download Rulebook
     </button>
   </Link>
-)} */}
-
-        {/* SECONDARY CTA */}
-<Link to='https://drive.google.com/file/d/1mCZv8RE6YKEvrkX9XvWh-a34LvwUjNSY/view'>
-<button className="
-    flex items-center justify-center gap-2
-    px-6 py-3 rounded-xl
-    bg-purple-950/20 backdrop-blur-md
-    border border-white/10
-    text-purple-200 font-medium tracking-wide
-    shadow-[0_0_15px_rgba(168,85,247,0.1)]
-    
-    hover:bg-purple-500/20
-    hover:border-purple-400/40
-    hover:text-white
-    hover:shadow-[0_0_25px_rgba(168,85,247,0.35)]
-    
-    transition-all duration-300 ease-out 
-    active:scale-[0.98]
-">
-    <FaBook /> Download Rulebook
-</button>
-</Link>
-        </div>
+</div>
 
           </div>
 
@@ -117,34 +108,8 @@ export default function Home() {
 
 
 {/* GRAND PRIZE */}
-{/* PRIZE BREAKDOWN POOL */}
-<section className="px-4 sm:px-6 md:px-10 mt-16 max-w-5xl mx-auto">
-  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-    <div className="bg-gradient-to-b from-yellow-500/10 to-transparent border border-yellow-500/30 p-6 rounded-2xl text-center">
-      <FaTrophy className="text-yellow-400 text-3xl mx-auto mb-2" />
-      <h3 className="text-gray-400 text-xs font-bold uppercase">Champion</h3>
-      <p className="text-2xl font-extrabold text-yellow-300 mt-1 font-mono">50,000 BDT</p>
-    </div>
-    <div className="bg-gradient-to-b from-slate-400/10 to-transparent border border-slate-400/30 p-6 rounded-2xl text-center">
-      <FaAward className="text-slate-300 text-3xl mx-auto mb-2" />
-      <h3 className="text-gray-400 text-xs font-bold uppercase">1st Runner-Up</h3>
-      <p className="text-2xl font-extrabold text-slate-200 mt-1 font-mono">30,000 BDT</p>
-    </div>
-    <div className="bg-gradient-to-b from-amber-700/10 to-transparent border border-amber-700/30 p-6 rounded-2xl text-center">
-      <FaAward className="text-amber-600 text-3xl mx-auto mb-2" />
-      <h3 className="text-gray-400 text-xs font-bold uppercase">2nd Runner-Up</h3>
-      <p className="text-2xl font-extrabold text-amber-500 mt-1 font-mono">20,000 BDT</p>
-    </div>
-  </div>
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-4">
-    <div className="bg-purple-950/30 border border-purple-500/20 p-4 rounded-xl text-center text-xs">
-      <span className="text-purple-300 font-bold">Special Creative Award:</span> <span className="font-mono text-white ml-1 font-bold">10,000 BDT</span>
-    </div>
-    <div className="bg-purple-950/30 border border-purple-500/20 p-4 rounded-xl text-center text-xs">
-      <span className="text-purple-300 font-bold">Special Technical Award:</span> <span className="font-mono text-white ml-1 font-bold">10,000 BDT</span>
-    </div>
-  </div>
-</section>
+
+<PremiumPrizeSection />
 
 
 {/* PERKS */}
