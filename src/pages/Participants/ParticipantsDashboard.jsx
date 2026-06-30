@@ -593,7 +593,7 @@ export default function ParticipantsDashboard() {
     </div>
   ) : (
     <span className="text-slate-400 text-sm bg-slate-700/20 px-3 py-1.5 rounded-lg border border-dashed border-slate-500/40">
-      No assigned judge yet
+      No assigned judge yet.
     </span>
   )}
 </div>
