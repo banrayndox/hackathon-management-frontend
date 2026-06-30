@@ -498,7 +498,7 @@ export default function ParticipantsDashboard() {
                         {!isPaymentDone && (
                           <button onClick={handleLeaveTeam} className="px-3.5 py-2 text-xs rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-400 font-medium transition">Leave</button>
                         )}
-                        {!isPaymentDone && isCreator (
+                        {!isPaymentDone && isCreator && (
                           <Link to="/participants/payment">
                             <button className="px-4 py-2 text-xs bg-blue-600 hover:bg-blue-500 rounded-xl font-bold flex items-center gap-2 text-white">
                               <FaCreditCard /> Complete Payment
