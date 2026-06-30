@@ -33,7 +33,7 @@ export default function JudgesList() {
     setLoadingTeams(true);
     try {
       const res = await API.get(`/api/admin/judges/${judge._id}/teams`);
-      console.log(res)
+ 
       setAssignedTeams(res.data);
     } catch (err) {
       console.error("Failed to fetch teams", err);
@@ -317,7 +317,7 @@ export default function JudgesList() {
                 <div key={team._id || idx} className="p-3 bg-white/[0.01] border border-white/[0.04] rounded-lg hover:border-purple-500/20 transition-all">
                   <div className="text-sm font-semibold text-slate-200">{team.name}</div>
                   <div className="text-xs text-slate-400 mt-1 truncate">
-                    {team.projectTitle ? `💡 Project: ${team.projectTitle}` : "⏳ No project submitted yet"}
+                    {team.submitted ? `💡 Project: ${team.projectName}` : "⏳ No project submitted yet"}
                   </div>
                 </div>
               ))
