@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
+import { useAuth } from "../context/AuthContext";
 
 export default function Leaderboard() {
   const [teams, setTeams] = useState([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-
+  const {user} = useAuth()
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export default function Leaderboard() {
     t.name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
 
   // 3. Slice array for pagination pages
@@ -138,11 +139,20 @@ export default function Leaderboard() {
                         </td>
 
                         {/* SCORE STYLING */}
-                        <td className="p-4 pr-6 text-right">
-                          <span className="inline-block text-sm font-bold text-purple-300 tracking-wide bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-lg">
-                            ⭐ {score}
-                          </span>
-                        </td>
+                          <td className="p-4 pr-6 text-right">
+                          {user?.role === 'judge' || user?.role === 'admin' ? (
+                            <span className="inline-block text-sm font-bold text-purple-300 tracking-wide bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-lg">
+                              ⭐ {score}
+                            </span>
+                          ) : user?.role === 'participant' ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 font-medium bg-white/[0.03] border border-white/[0.06] px-2.5 py-1 rounded-lg select-none">
+                              <svg className="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                              <span>Hidden</span>
+                            </span>
+                          ) : null}
+                            </td>
                       </tr>
                     );
                   })

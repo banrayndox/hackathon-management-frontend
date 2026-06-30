@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { FaGavel, FaAward, FaRegCommentDots, FaCheckCircle, FaStar } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import API from "../../api/axios";
-
+import { useAuth } from "../../context/AuthContext";
+import toast from "react-hot-toast";
 export default function JudgeDashboard() {
   const [assignedTeams, setAssignedTeams] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const {user} = useAuth()
   // Scoring Segmentation States
   const [activeTeamId, setActiveTeamId] = useState(null);
   const [scores, setScores] = useState({
@@ -45,6 +46,7 @@ export default function JudgeDashboard() {
     e.preventDefault();
     if (!activeTeamId) return;
 
+    const tid = toast.loading("Submitting evaluation...");
     try {
       setLoading(true);
       await API.put(`/api/judge/teams/${activeTeamId}/scores`, {
@@ -52,14 +54,12 @@ export default function JudgeDashboard() {
         feedback: feedback.trim()
       });
       await refreshData();
-      
-      // Reset Form & Close Panel
+      toast.success("Evaluation submitted successfully!", { id: tid });
       setActiveTeamId(null);
       setScores({ innovation: 50, complexity: 50, design: 50, presentation: 50, functionality: 50 });
       setFeedback("");
     } catch (err) {
-      console.error("Failed to submit evaluation:", err);
-      alert(err.response?.data?.message || "Failed to submit evaluation");
+      toast.error(err.response?.data?.message || "Failed to submit evaluation", { id: tid });
     } finally {
       setLoading(false);
     }
@@ -110,9 +110,29 @@ export default function JudgeDashboard() {
       {/* HEADER SECTION */}
       <div className="max-w-7xl mx-auto mb-12 border-b border-white/[0.06] pb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-            Judge Dashboard
-          </h1>
+          <div className="flex items-center gap-4 mb-8">
+  {/* প্রোফাইল পিকচার */}
+  {user?.profilePicture ? (
+    <img
+      src={user?.profilePicture}
+      alt={user.name}
+      className="w-12 h-12 rounded-full border-2 border-purple-500/30 object-cover shadow-lg shadow-purple-500/10"
+    />
+  ) : (
+    <div className="w-12 h-12 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 font-bold text-lg shadow-lg shadow-purple-500/10">
+      {user?.name?.charAt(0).toUpperCase() || '?'}
+    </div>
+  )}
+
+  <div>
+    <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-white to-white bg-clip-text text-transparent">
+      {user?.name}'s Judge Dashboard
+    </h1>
+    {user?.email && (
+      <p className="text-sm text-slate-400 mt-0.5">{user.email}</p>
+    )}
+  </div>
+</div>
           <p className="text-slate-400 text-sm mt-2 font-medium">
             Evaluate your assigned hackathon projects, input metrics based on core criteria segments, and provide critical feedback.
           </p>
@@ -142,7 +162,7 @@ export default function JudgeDashboard() {
         {/* ASSIGNED TEAMS TABLE CONTAINER */}
         <div className={`bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 backdrop-blur-xl ${activeTeamId ? "lg:col-span-2" : "lg:col-span-3"}`}>
           <h2 className="text-xl font-bold text-slate-200 mb-6 flex items-center gap-2">
-            <FaGavel className="text-purple-400" /> Assigned Projects
+            <FaGavel className="text-purple-400" /> Assigned Team List
           </h2>
 
           <div className="overflow-x-auto">
@@ -185,16 +205,30 @@ export default function JudgeDashboard() {
                         )}
                       </td>
                       <td className="py-4 text-right">
-                        <button
+                        {/* <button
                           onClick={() => handleOpenJudgement(team)}
                           className={`px-4 py-2 rounded-xl text-xs font-semibold border transition shadow-md ${
                             judged
                               ? "border-white/[0.08] text-slate-400 hover:bg-white/[0.04]"
                               : "border-purple-500/30 text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 shadow-purple-950/20"
                           }`}
+                        
                         >
                           {judged ? "Re-evaluate" : "Judge Now"}
-                        </button>
+                        </button> */}
+
+                          <button
+                            onClick={() => !judged && handleOpenJudgement(team)}
+                            disabled={judged}
+                            className={`px-4 py-2 rounded-xl text-xs font-semibold border transition shadow-md ${
+                              judged
+                                ? "border-white/[0.08] text-slate-500 bg-white/[0.02] cursor-not-allowed opacity-60"
+                                : "border-purple-500/30 text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 shadow-purple-950/20"
+                            }`}
+                          >
+                            {judged ? "✓ Judged" : "Judge Now"}
+                          </button>
+
                       </td>
                     </tr>
                   );
@@ -224,6 +258,51 @@ export default function JudgeDashboard() {
                 ✕ Close
               </button>
             </div>
+
+            {activeTeam?.submitted ? (
+              <div className="mb-6 p-4 rounded-xl bg-purple-950/20 border border-purple-500/10 text-xs space-y-3">
+                <div className="font-bold text-slate-200 uppercase tracking-wider text-purple-400">Project Details</div>
+                <div>
+                  <span className="text-slate-400 font-bold uppercase">Name: </span>
+                  <span className="text-slate-300 font-semibold">{activeTeam.projectName}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 font-bold uppercase">Description: </span>
+                  <p className="text-slate-300 leading-relaxed mt-1 text-justify">{activeTeam.projectDescription}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400 font-bold uppercase">Tech Stack: </span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {activeTeam.techStack?.map((t, idx) => (
+                      <span key={idx} className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-3 pt-1 text-purple-300 font-semibold">
+                  {activeTeam.githubLink && (
+                    <a href={activeTeam.githubLink} target="_blank" rel="noreferrer" className="hover:text-purple-200 hover:underline">
+                      GitHub
+                    </a>
+                  )}
+                  {activeTeam.driveLink && (
+                    <a href={activeTeam.driveLink} target="_blank" rel="noreferrer" className="hover:text-purple-200 hover:underline">
+                      Slides/Drive
+                    </a>
+                  )}
+                  {activeTeam.demoLink && (
+                    <a href={activeTeam.demoLink} target="_blank" rel="noreferrer" className="hover:text-purple-200 hover:underline">
+                      Live Demo
+                    </a>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="mb-6 p-3 rounded-xl bg-white/[0.01] border border-white/[0.04] text-xs text-slate-500 italic">
+                * This team has not submitted project details yet.
+              </div>
+            )}
 
             <form onSubmit={handleSubmitEvaluation} className="space-y-5">
               

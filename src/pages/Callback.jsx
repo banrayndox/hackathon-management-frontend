@@ -1,33 +1,41 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // 👈 ইউজ অথ ইম্পোর্ট করুন
+import { useAuth } from '../context/AuthContext'; 
 
 const Callback = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { fetchUserProfile } = useAuth(); // 👈 ফাংশনটি বের করে নিন
-
+  const { fetchUserProfile } = useAuth(); 
+  const {user} = useAuth()
   useEffect(() => {
     const query = new URLSearchParams(location.search);
     const token = query.get('token');
 
     if (token) {
       localStorage.setItem('token', token);
-      console.log('✅ Token saved from callback');
       
-      // ১. টোকেন সেভ করার সাথে সাথে ব্যাকএন্ড থেকে ইউজার প্রোফাইল ফেচ করুন
       fetchUserProfile().then(() => {
-        // ২. ফেচ সফল হওয়ার পর স্মুথলি হোম পেজে চলে যান (কোনো রিফ্রেশ লাগবে না)
-        navigate('/');
+  if (user) {
+    const roleMap = {
+      admin: '/admin/dashboard',
+      judge: '/judge/dashboard',
+      participant: '/participants/dashboard',
+    };
+    navigate(roleMap[user.role] || '/');
+  } else {
+    navigate('/');
+  }
       });
 
     } else {
-      console.error('❌ No token in callback URL');
+
       navigate('/login?error=no_token');
     }
   }, [location, navigate, fetchUserProfile]);
 
-  return <div className="text-white text-center mt-20">Logging in...</div>;
+  return  (<div className="min-h-screen flex items-center justify-center bg-[#0B0614] text-white">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500"></div>
+      </div>);
 };
 
 export default Callback;

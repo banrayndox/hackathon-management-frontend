@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import API from "../api/axios";
+import { FaGithub, FaLink, FaFolderOpen } from "react-icons/fa";
 
 export default function TeamProfilePage() {
   const { id } = useParams();
@@ -53,6 +54,7 @@ export default function TeamProfilePage() {
 
       {/* MAIN CARD */}
       <div className="relative w-full max-w-3xl bg-white/[0.02] border border-white/[0.08] rounded-2xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl shadow-black/40">
+        
         {/* HEADER SECTION */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pb-6 border-b border-white/[0.06]">
           <div>
@@ -60,7 +62,7 @@ export default function TeamProfilePage() {
               {team.name}
             </h1>
             <p className="text-sm text-slate-400 mt-1.5 font-medium">
-              Registered Hackathon Team
+              {team.submitted ? `Project: ${team.projectName}` : "Registered Hackathon Team"}
             </p>
           </div>
 
@@ -81,10 +83,78 @@ export default function TeamProfilePage() {
           </div>
         </div>
 
+        {/* PROJECT DETAILS (Only if submitted) */}
+        {team.submitted ? (
+          <div className="mt-8 space-y-4">
+            <h3 className="text-xs font-semibold text-slate-400 tracking-wider uppercase">
+              Project Description
+            </h3>
+            <p className="text-sm text-slate-300 leading-relaxed bg-white/[0.01] border border-white/[0.04] p-4 rounded-xl font-medium text-justify">
+              {team.projectDescription}
+            </p>
+
+            {team.techStack && team.techStack.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold text-slate-400 tracking-wider uppercase mb-2">
+                  Tech Stack
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {team.techStack.map((techItem, index) => (
+                    <span
+                      key={index}
+                      className="text-xs font-medium px-3 py-1.5 rounded-lg bg-indigo-500/[0.06] text-indigo-300 border border-indigo-500/15 tracking-wide hover:border-indigo-400/30 transition-colors"
+                    >
+                      {techItem}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Links */}
+            <div className="flex flex-wrap gap-3 pt-2">
+              {team.githubLink && (
+                <a
+                  href={team.githubLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.08] text-xs font-bold transition text-slate-200"
+                >
+                  <FaGithub /> GitHub Link
+                </a>
+              )}
+              {team.driveLink && (
+                <a
+                  href={team.driveLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.08] text-xs font-bold transition text-slate-200"
+                >
+                  <FaFolderOpen /> Slide / Drive Link
+                </a>
+              )}
+              {team.demoLink && (
+                <a
+                  href={team.demoLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.08] text-xs font-bold transition text-slate-200"
+                >
+                  <FaLink /> Live Demo Link
+                </a>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="mt-8 p-4 rounded-xl bg-white/[0.01] border border-white/[0.04] text-xs text-slate-500 italic">
+            No project details submitted by this team yet.
+          </div>
+        )}
+
         {/* TEAM MEMBERS GRID */}
-        <div className="mt-8">
+        <div className="mt-8 pt-6 border-t border-white/[0.06]">
           <h3 className="text-xs font-semibold text-slate-400 tracking-wider uppercase mb-4">
-            Team Members
+            Team Roster ({team.members?.length || 0})
           </h3>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -122,7 +192,7 @@ export default function TeamProfilePage() {
                       )}
                     </div>
                     <p className="text-xs text-slate-400 truncate mt-0.5">
-                      {member.department ? `${member.department} Department` : "Hackathon Participant"}
+                      {member.department ? `${member.department} Department` : "Participant"}
                     </p>
                   </div>
                 </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { FaCheckCircle, FaWallet, FaReceipt } from "react-icons/fa";
 import API from "../../api/axios";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function PaymentConfirmation() {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ export default function PaymentConfirmation() {
   const [senderNumber, setSenderNumber] = useState("");
   const [referenceName, setReferenceName] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
-  
+
   const [teamId, setTeamId] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -24,11 +25,12 @@ export default function PaymentConfirmation() {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
+        
         const res = await API.get("/api/participant/my-teams");
         if (res.data && res.data.length > 0) {
           setTeamId(res.data[0]._id);
         } else {
-          alert("You are not part of any team. Please create or join a team first.");
+          toast.error("You are not in any team. Create or join a team first.");
           navigate("/participants/dashboard");
         }
       } catch (err) {
@@ -44,18 +46,19 @@ export default function PaymentConfirmation() {
     e.preventDefault();
     if (!teamId) return;
 
+    const tid = toast.loading("Submitting payment details...");
     try {
       setLoading(true);
       const isCash = selectedMethod === "cash";
       await API.put(`/api/participant/teams/${teamId}/payment`, {
         paymentMethod: selectedMethod,
         transactionId: isCash ? referenceName.trim() : transactionId.trim(),
-        paid: false // wait for admin approval
+        paid: false
       });
+      toast.success("Payment details submitted! Awaiting admin approval.", { id: tid });
       setIsSubmitted(true);
     } catch (err) {
-      console.error("Failed to submit payment details", err);
-      alert(err.response?.data?.message || "Failed to submit payment details");
+      toast.error(err.response?.data?.message || "Failed to submit payment details", { id: tid });
     } finally {
       setLoading(false);
     }
@@ -196,9 +199,9 @@ export default function PaymentConfirmation() {
               <FaCheckCircle />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-200">Verification Request Received</h2>
+              <h2 className="text-xl font-bold text-slate-200">Verification Request Done</h2>
               <p className="text-xs text-slate-400 max-w-xs mx-auto mt-2 leading-relaxed font-medium">
-                Your credentials have been logged. The backend admin desk will audit the ledger statement and approve your status shortly.
+                Your payment information have been submitted. The admin desk will audit the ledger statement and approve your status shortly.
               </p>
             </div>
             <div className="pt-4 flex justify-center gap-2">
@@ -208,12 +211,12 @@ export default function PaymentConfirmation() {
               >
                 Go to Dashboard
               </button>
-              <button
+              {/* <button
                 onClick={() => setIsSubmitted(false)}
                 className="px-6 py-2 text-xs font-semibold rounded-xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.06] text-slate-300 transition"
               >
                 Submit Another Receipt
-              </button>
+              </button> */}
             </div>
           </div>
         )}

@@ -1,12 +1,40 @@
 import { useState, useEffect } from "react";
-import { 
-  FaUsers, FaGavel, FaGamepad, FaCheckCircle, 
+import { useAuth } from "../../context/AuthContext";
+import {
+  FaUsers, FaGavel, FaGamepad, FaCheckCircle,
   FaTrashAlt, FaUserShield, FaUserMinus, FaSearch,
-  FaEdit, FaTimes
+  FaEdit, FaTimes, FaExclamationTriangle
 } from "react-icons/fa";
 import API from "../../api/axios";
+import toast from "react-hot-toast";
+
+/* ── Reusable Confirm Modal ── */
+function ConfirmModal({ isOpen, title, message, confirmLabel = "Confirm", danger = true, onConfirm, onCancel }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative z-10 w-full max-w-sm bg-[#13082a] border border-white/[0.08] rounded-2xl p-6 shadow-2xl shadow-black/60">
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${
+          danger ? "bg-red-500/10 border border-red-500/20 text-red-400" : "bg-purple-500/10 border border-purple-500/20 text-purple-400"
+        }`}>
+          <FaExclamationTriangle className="text-xl" />
+        </div>
+        <h3 className="text-base font-bold text-slate-200 text-center">{title}</h3>
+        <p className="text-xs text-slate-400 text-center mt-2 leading-relaxed">{message}</p>
+        <div className="flex gap-3 mt-6">
+          <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl border border-white/[0.08] text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] text-xs font-bold transition">Cancel</button>
+          <button onClick={onConfirm} className={`flex-1 py-2.5 rounded-xl text-white text-xs font-bold transition ${
+            danger ? "bg-red-600 hover:bg-red-500" : "bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400"
+          }`}>{confirmLabel}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
+  const {user} = useAuth()
   const [users, setUsers] = useState([]);
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,7 +43,11 @@ export default function AdminDashboard() {
   const [userSearch, setUserSearch] = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState("all");
 
+const [teamJudgeFilter, setTeamJudgeFilter] = useState("all");
+const [userTeamRoleFilter, setUserTeamRoleFilter] = useState("all");
+
   const [teamSearch, setTeamSearch] = useState("");
+  
   const [teamPaymentFilter, setTeamPaymentFilter] = useState("all");
 
   // Modal state for points adjustment
@@ -24,6 +56,12 @@ export default function AdminDashboard() {
   const [tempCriteria, setTempCriteria] = useState({ innovation: 0, complexity: 0, design: 0, presentation: 0, functionality: 0 });
   const [tempFeedback, setTempFeedback] = useState("");
 
+  // Confirm modal
+  const [confirmModal, setConfirmModal] = useState({ open: false, title: "", message: "", confirmLabel: "Confirm", danger: true, onConfirm: null });
+  const openConfirm = (title, message, onConfirm, { confirmLabel = "Confirm", danger = true } = {}) =>
+    setConfirmModal({ open: true, title, message, confirmLabel, danger, onConfirm });
+  const closeConfirm = () => setConfirmModal(prev => ({ ...prev, open: false }));
+
   const refreshData = async () => {
     try {
       setLoading(true);
@@ -31,6 +69,8 @@ export default function AdminDashboard() {
         API.get("/api/admin/users"),
         API.get("/api/admin/teams")
       ]);
+      // console.log(usersRes)
+      // console.log(teamsRes)
       setUsers(usersRes.data);
       setTeams(teamsRes.data);
     } catch (err) {
@@ -45,72 +85,91 @@ export default function AdminDashboard() {
   }, []);
 
   // Actions
-  const handleDeleteUser = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
-    try {
-      setLoading(true);
-      await API.delete(`/api/admin/users/${id}`);
-      await refreshData();
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || "Failed to delete user");
-    } finally {
-      setLoading(false);
-    }
+  const handleDeleteUser = (id, name) => {
+    openConfirm(
+      "Delete User",
+      `Permanently delete ${name}? This cannot be undone.`,
+      async () => {
+        closeConfirm();
+        const tid = toast.loading("Deleting user...");
+        try {
+          setLoading(true);
+          await API.delete(`/api/admin/users/${id}`);
+          toast.success("User deleted", { id: tid });
+          await refreshData();
+        } catch (err) {
+          toast.error(err.response?.data?.message || "Failed to delete user", { id: tid });
+        } finally {
+          setLoading(false);
+        }
+      },
+      { confirmLabel: "Delete", danger: true }
+    );
   };
 
-  const toggleJudgeRole = async (id, currentRole) => {
+  const toggleJudgeRole = async (id, currentRole, name) => {
+    const newRole = currentRole === "judge" ? "participant" : "judge";
+    const tid = toast.loading(newRole === "judge" ? "Promoting to Judge..." : "Demoting to Participant...");
     try {
       setLoading(true);
-      const newRole = currentRole === "judge" ? "participant" : "judge";
       await API.put(`/api/admin/users/${id}/role`, { role: newRole });
+      toast.success(newRole === "judge" ? `${name} promoted to Judge` : `${name} demoted to Participant`, { id: tid });
       await refreshData();
     } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || "Failed to update role");
+      toast.error(err.response?.data?.message || "Failed to update role", { id: tid });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAssignJudge = async (teamId, judgeId) => {
+  const handleAssignJudge = async (teamId, judgeId, judgeName) => {
+    const tid = toast.loading(judgeId === "None" ? "Removing judge..." : `Assigning ${judgeName || "judge"}...`);
     try {
       setLoading(true);
       await API.put(`/api/admin/teams/${teamId}/assign-judge`, { judgeId: judgeId === "None" ? null : judgeId });
+      toast.success(judgeId === "None" ? "Judge unassigned" : `Judge assigned successfully`, { id: tid });
       await refreshData();
     } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || "Failed to assign judge");
+      toast.error(err.response?.data?.message || "Failed to assign judge", { id: tid });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApprovePayment = async (teamId) => {
+  const handleApprovePayment = async (teamId, teamName) => {
+    const tid = toast.loading("Approving payment...");
     try {
       setLoading(true);
       await API.put(`/api/admin/teams/${teamId}/payment`, { paid: true });
+      toast.success(`Payment approved for ${teamName}`, { id: tid });
       await refreshData();
     } catch (err) {
-      console.error("Failed to approve payment", err);
-      alert(err.response?.data?.message || "Failed to approve payment");
+      toast.error(err.response?.data?.message || "Failed to approve payment", { id: tid });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRemoveTeam = async (id) => {
-    if (!window.confirm("Are you sure you want to remove this team?")) return;
-    try {
-      setLoading(true);
-      await API.delete(`/api/admin/teams/${id}`);
-      await refreshData();
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || "Failed to delete team");
-    } finally {
-      setLoading(false);
-    }
+  const handleRemoveTeam = (id, name) => {
+    openConfirm(
+      "Remove Team",
+      `Permanently remove team "${name}"? This cannot be undone.`,
+      async () => {
+        closeConfirm();
+        const tid = toast.loading("Removing team...");
+        try {
+          setLoading(true);
+          await API.delete(`/api/admin/teams/${id}`);
+          toast.success(`Team "${name}" removed`, { id: tid });
+          await refreshData();
+        } catch (err) {
+          toast.error(err.response?.data?.message || "Failed to delete team", { id: tid });
+        } finally {
+          setLoading(false);
+        }
+      },
+      { confirmLabel: "Remove", danger: true }
+    );
   };
 
   const handleOpenPointsModal = (team) => {
@@ -135,21 +194,22 @@ export default function AdminDashboard() {
   const handleSavePoints = async () => {
     const valid = Object.values(tempCriteria).every(v => v >= 0 && v <= 100);
     if (!valid) {
-      alert("Each criterion must be between 0 and 100.");
+      toast.error("Each criterion must be between 0 and 100.");
       return;
     }
+    const tid = toast.loading("Saving scores...");
     try {
       setLoading(true);
       await API.put(`/api/admin/teams/${selectedTeam._id}/scores`, {
         ...tempCriteria,
         feedback: tempFeedback.trim()
       });
+      toast.success(`Scores saved for ${selectedTeam.name}`, { id: tid });
       await refreshData();
       setShowPointsModal(false);
       setSelectedTeam(null);
     } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || "Failed to save points");
+      toast.error(err.response?.data?.message || "Failed to save points", { id: tid });
     } finally {
       setLoading(false);
     }
@@ -174,20 +234,28 @@ export default function AdminDashboard() {
   const totalPaidTeams = teams.filter(team => team.paid).length;
 
   // Filtered Arrays
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name?.toLowerCase().includes(userSearch.toLowerCase()) || 
-                          user.email?.toLowerCase().includes(userSearch.toLowerCase());
-    const matchesRole = userRoleFilter === "all" || user.role === userRoleFilter;
-    return matchesSearch && matchesRole;
-  });
+const filteredUsers = users.filter(user => {
+  const matchesSearch = user.name?.toLowerCase().includes(userSearch.toLowerCase()) || 
+                        user.email?.toLowerCase().includes(userSearch.toLowerCase());
+  const matchesRole = userRoleFilter === "all" || user.role === userRoleFilter;
+  // Leader/Member ফিল্টার – ধরে নিচ্ছি user-এর teamRole বা leader ফিল্ড আছে
+  const userTeamRole = user.teamRole || (user.isLeader ? "leader" : "member"); // আপনার ডাটা অনুযায়ী পরিবর্তন করুন
+  const matchesTeamRole = userTeamRoleFilter === "all" || userTeamRole === userTeamRoleFilter;
+  return matchesSearch && matchesRole && matchesTeamRole;
+});
 
-  const filteredTeams = teams.filter(team => {
-    const matchesSearch = team.name?.toLowerCase().includes(teamSearch.toLowerCase());
-    const matchesPayment = teamPaymentFilter === "all" || 
-                           (teamPaymentFilter === "paid" && team.paid) || 
-                           (teamPaymentFilter === "unpaid" && !team.paid);
-    return matchesSearch && matchesPayment;
-  });
+const filteredTeams = teams.filter(team => {
+  const matchesSearch = team.name?.toLowerCase().includes(teamSearch.toLowerCase());
+  const matchesPayment = teamPaymentFilter === "all" || 
+                         (teamPaymentFilter === "paid" && team.paid) || 
+                         (teamPaymentFilter === "unpaid" && !team.paid);
+  // জাজ ফিল্টার
+  const hasJudge = team.feedback && team.feedback !== "";
+  const matchesJudge = teamJudgeFilter === "all" || 
+                       (teamJudgeFilter === "judge" && hasJudge) || 
+                       (teamJudgeFilter === "nonjudge" && !hasJudge);
+  return matchesSearch && matchesPayment && matchesJudge;
+});
 
   if (loading && users.length === 0) {
     return (
@@ -203,11 +271,31 @@ export default function AdminDashboard() {
       <div className="absolute bottom-[10%] right-[-5%] w-[400px] h-[400px] bg-pink-600/5 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto mb-12 border-b border-white/[0.06] pb-6">
-        <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-          Admin Control Center
-        </h1>
+          <div className="flex items-center gap-4 mb-8">
+  {/* প্রোফাইল পিকচার */}
+  {user?.profilePicture ? (
+    <img
+      src={user?.profilePicture}
+      alt={user.name}
+      className="w-12 h-12 rounded-full border-2 border-purple-500/30 object-cover shadow-lg shadow-purple-500/10"
+    />
+  ) : (
+    <div className="w-12 h-12 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 font-bold text-lg shadow-lg shadow-purple-500/10">
+      {user?.name?.charAt(0).toUpperCase() || '?'}
+    </div>
+  )}
+
+  <div>
+    <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-white to-white bg-clip-text text-transparent">
+      {user?.name}'s Control Dashboard
+    </h1>
+    {user?.email && (
+      <p className="text-sm text-slate-400 mt-0.5">{user.email}</p>
+    )}
+  </div>
+</div>
         <p className="text-slate-400 text-sm mt-2 font-medium">
-          Manage system configurations, control user privileges, assign judges to hackathon teams, and monitor system metrics.
+          Control user privileges, assign judges to hackathon teams, and monitor system metrics.
         </p>
       </div>
 
@@ -276,6 +364,17 @@ export default function AdminDashboard() {
                 <option value="participant">Participant</option>
                 <option value="judge">Judge</option>
               </select>
+
+              <select
+  value={userTeamRoleFilter}
+  onChange={(e) => setUserTeamRoleFilter(e.target.value)}
+  className="bg-[#120A24] border border-white/[0.06] rounded-xl px-3 py-2 text-xs text-slate-300 outline-none focus:border-purple-500/50 transition"
+>
+  <option value="all">Leader/Member</option>
+  <option value="leader">Leader</option>
+  <option value="member">Member</option>
+</select>
+
             </div>
 
             <div className="overflow-x-auto">
@@ -291,7 +390,26 @@ export default function AdminDashboard() {
                   {filteredUsers.map((userItem) => (
                     <tr key={userItem._id} className="group">
                       <td className="py-4">
-                        <div className="text-slate-200 font-semibold">{userItem.name}</div>
+                        <div className="flex items-center gap-3">
+  {/* Profile Picture */}
+                  {userItem.profilePicture ? (
+                    <img 
+                      src={userItem.profilePicture} 
+                      alt={`${userItem.name}'s profile`} 
+                      className="w-10 h-10 rounded-full object-cover border border-slate-700"
+                    />
+                  ) : (
+                    /* Image na thakle ekti default placeholder icon */
+                    <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-slate-300 text-sm font-medium">
+                      {userItem.name ? userItem.name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                  )}
+
+                  {/* User Name */}
+                  <div className="text-slate-200 font-semibold">
+                    {userItem.name}
+                  </div>
+</div>
                         <div className="text-xs text-slate-500">{userItem.email}</div>
                       </td>
                       <td className="py-4">
@@ -305,8 +423,8 @@ export default function AdminDashboard() {
                       </td>
                       <td className="py-4 text-right">
                         <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => toggleJudgeRole(userItem._id, userItem.role)}
+   {userItem.role !== 'admin' && (   <button
+                            onClick={() => toggleJudgeRole(userItem._id, userItem.role, userItem.name)}
                             title={userItem.role === "judge" ? "Demote to User" : "Promote to Judge"}
                             className={`p-2 rounded-lg border text-xs transition transform hover:-translate-y-0.5 ${
                               userItem.role === "judge"
@@ -315,14 +433,16 @@ export default function AdminDashboard() {
                             }`}
                           >
                             {userItem.role === "judge" ? <FaUserMinus /> : <FaUserShield />}
-                          </button>
-                          <button
-                            onClick={() => handleDeleteUser(userItem._id)}
-                            title="Delete User"
-                            className="p-2 rounded-lg border border-red-500/20 text-red-400 hover:bg-red-500/10 text-xs transition transform hover:-translate-y-0.5"
-                          >
-                            <FaTrashAlt />
-                          </button>
+                          </button>)}
+ {userItem.role !== 'admin' && (
+  <button
+    onClick={() => handleDeleteUser(userItem._id, userItem.name)}
+    title="Delete User"
+    className="p-2 rounded-lg border border-red-500/20 text-red-400 hover:bg-red-500/10 text-xs transition transform hover:-translate-y-0.5"
+  >
+    <FaTrashAlt className="w-4 h-4" /> {/* react-icons এ Tailwind-এর w-4 h-4 দিয়ে সাইজ কন্ট্রোল করা যায় */}
+  </button>
+)}
                         </div>
                       </td>
                     </tr>
@@ -366,6 +486,16 @@ export default function AdminDashboard() {
                 <option value="paid">Paid</option>
                 <option value="unpaid">Unpaid</option>
               </select>
+
+              <select
+  value={teamJudgeFilter}
+  onChange={(e) => setTeamJudgeFilter(e.target.value)}
+  className="bg-[#120A24] border border-white/[0.06] rounded-xl px-3 py-2 text-xs text-slate-300 outline-none focus:border-purple-500/50 transition"
+>
+  <option value="all">All Judges</option>
+  <option value="judge">Has Judge</option>
+  <option value="nonjudge">No Judge</option>
+</select>
             </div>
 
             <div className="overflow-x-auto">
@@ -401,7 +531,7 @@ export default function AdminDashboard() {
                                 <span>Method: {team.paymentMethod}</span>
                               </div>
                               <button
-                                onClick={() => handleApprovePayment(team._id)}
+                                onClick={() => handleApprovePayment(team._id, team.name)}
                                 className="px-2 py-1 bg-green-600 hover:bg-green-500 text-[10px] font-bold rounded text-white transition active:scale-[0.98]"
                               >
                                 Approve
@@ -419,7 +549,10 @@ export default function AdminDashboard() {
                       <td className="py-4">
                         <select
                           value={team.assignedJudge?._id || team.assignedJudge || "None"}
-                          onChange={(e) => handleAssignJudge(team._id, e.target.value)}
+                          onChange={(e) => {
+                            const judge = judgesList.find(j => j._id === e.target.value);
+                            handleAssignJudge(team._id, e.target.value, judge?.name);
+                          }}
                           className="bg-[#120A24] border border-white/[0.06] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 outline-none transition"
                         >
                           <option value="None">Assign Judge...</option>
@@ -441,7 +574,7 @@ export default function AdminDashboard() {
                             <FaEdit />
                           </button>
                           <button
-                            onClick={() => handleRemoveTeam(team._id)}
+                            onClick={() => handleRemoveTeam(team._id, team.name)}
                             title="Remove Team"
                             className="p-2 rounded-lg border border-red-500/20 text-red-400 hover:bg-red-500/10 text-xs transition transform hover:-translate-y-0.5"
                           >
@@ -463,6 +596,17 @@ export default function AdminDashboard() {
         </div>
 
       </div>
+
+      {/* CONFIRM MODAL */}
+      <ConfirmModal
+        isOpen={confirmModal.open}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmLabel={confirmModal.confirmLabel}
+        danger={confirmModal.danger}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={closeConfirm}
+      />
 
       {/* POINTS ADJUSTMENT MODAL */}
       {showPointsModal && selectedTeam && (

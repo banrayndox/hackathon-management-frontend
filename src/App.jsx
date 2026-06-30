@@ -23,17 +23,16 @@ import PaymentConfirmationLanding from './layout/PaymentConfirmationLanding.jsx'
 const App = () => {
   return (
     <Routes>
-      {/* পাবলিক রাউট */}
+    
       <Route path="/" element={<Landing />} />
       <Route path="/judgeslist" element={<JudgesListLanding />} />
-      <Route path="/teamlist" element={<TeamListLanding />} />
+      {/* <Route path="/teamlist" element={<TeamListLanding />} /> */}
       <Route path="/leaderboard" element={<LeaderBoardLanding />} />
       <Route path="/team-profile/:id" element={<TeamProfileLanding />} />
 
-      {/* লগইন ও কলব্যাক (পাবলিক) */}
+   
       <Route path="/auth/callback" element={<Callback />} />
 
-      {/* প্রোটেক্টেড রাউট – শুধু লগইন করা ইউজার দেখতে পাবে */}
       <Route
         path="/profile/:id"
         element={
@@ -43,7 +42,7 @@ const App = () => {
         }
       />
 
-      {/* রোল বেইজড প্রোটেক্টেড রাউট – শুধু নির্দিষ্ট রোল অ্যাক্সেস পাবে */}
+
       <Route
         path="/admin/dashboard"
         element={
@@ -77,7 +76,6 @@ const App = () => {
         }
       />
 
-      {/* 404 – ল্যান্ডিং পেজে রিডিরেক্ট */}
       <Route path="*" element={<Landing />} />
     </Routes>
   );

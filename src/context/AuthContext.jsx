@@ -26,13 +26,12 @@ export const AuthProvider = ({ children }) => {
       const res = await API.get('/api/auth/me', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      console.log('📥 fetchUserProfile success:', res.data);
       
       setUser(res.data);
       localStorage.setItem('user', JSON.stringify(res.data));
       return res.data;
     } catch (error) {
-      console.error('❌ fetchUserProfile error:', error);
+      console.error('Error to fetch');
       // টোকেন ইনভ্যালিড বা এক্সপায়ারড হলে ক্লিনআপ করা
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -56,7 +55,7 @@ export const AuthProvider = ({ children }) => {
         await API.post('/api/auth/logout', {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        console.log('✅ Logout API called');
+
       }
     } catch (err) {
       console.warn('Logout API error:', err);
@@ -68,7 +67,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // লগইন রিডাইরেক্ট (গুগল ওঅথ)
+
   const loginRedirect = () => {
     window.location.href = `${import.meta.env.VITE_APP_BACKEND_URL}/api/auth/google`;
   };
@@ -81,8 +80,6 @@ export const AuthProvider = ({ children }) => {
     loginRedirect,
   };
 
-  // স্পিনার লজিক ফিক্স: অ্যাপ লোড আটকে রাখবে না যদি টোকেন না থাকে
-  // এর ফলে /auth/callback পেজটি কোনো বাধা ছাড়াই লোড হতে পারবে
   const tokenExists = !!localStorage.getItem('token');
   if (loading && tokenExists) {
     return (

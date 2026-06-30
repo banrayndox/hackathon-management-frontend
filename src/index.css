@@ -10,3 +10,38 @@
   --text: #FFFFFF;
   --muted: #BDB4E5;
 }
+
+
+/* ১. পুরো ওয়েবসাইটের মূল রুট এলিমেন্টে স্ক্রলবার অ্যানিমেশন এনেবল করা */
+html {
+  scroll-behavior: smooth;
+  /* Firefox-এর জন্য কাস্টম স্ক্রলবার স্টাইল */
+  scrollbar-width: thin;
+  scrollbar-color: #a855f7 #090411;
+}
+
+/* ২. Chrome, Safari এবং Edge ব্রাউজারের জন্য স্ক্রলবার কাস্টমাইজেশন */
+
+/* স্ক্রলবারের পুরো উইডথ */
+::-webkit-scrollbar {
+  width: 8px; /* ১০ পিক্সেল থেকে একটু চিকন (৮ পিক্সেল) করলে দেখতে বেশি প্রিমিয়াম লাগে */
+  height: 8px; /* হরাইজন্টাল স্ক্রলবারের জন্য */
+}
+
+/* স্ক্রলবারের পেছনের ট্র্যাক বা ব্যাকগ্রাউন্ড */
+::-webkit-scrollbar-track {
+  background: #090411 !important; /* আপনার থিমের সাথে ম্যাচিং ডার্ক ব্যাকগ্রাউন্ড */
+}
+
+/* স্ক্রলবারের থাম্ব (যে বারটি মুভ করে) */
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #a855f7 0%, #06b6d4 100%) !important;
+  border-radius: 10px;
+  /* ট্র্যাকের সাথে একটু গ্যাপ রাখার জন্য বর্ডার */
+  border: 2px solid #090411; 
+}
+
+/* যখন মাউস স্ক্রলবারের ওপর হোভার করবে */
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #c084fc 0%, #22d3ee 100%) !important;
+}

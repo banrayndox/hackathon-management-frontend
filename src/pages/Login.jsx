@@ -11,7 +11,7 @@ const Login = () => {
   }
 
   const handleGoogleLogin = () => {
-    // Redirect to backend Google OAuth endpoint
+
     window.location.href = `${import.meta.env.VITE_APP_BACKEND_URL}/api/auth/google`;
   };
 
