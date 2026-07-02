@@ -19,12 +19,14 @@ import AdminDashboardLanding from './layout/AdminDashboardLanding.jsx';
 import JudgeDashboardLanding from './layout/JudgeDashboardLanding.jsx';
 import ParticipantsDashboardLanding from './layout/ParticipantsDashboardLanding.jsx';
 import PaymentConfirmationLanding from './layout/PaymentConfirmationLanding.jsx';
+import NotHumanLanding from './layout/NotHumanLanding.jsx';
 
 const App = () => {
   return (
     <Routes>
     
       <Route path="/" element={<Landing />} />
+      {/* <Route path="/not-human" element={<NotHumanLanding />} /> */}
       <Route path="/judgeslist" element={<ProtectedRoute allowedRoles={['admin', 'judge', 'participant']}><JudgesListLanding /></ProtectedRoute>} />
       {/* <Route path="/teamlist" element={<TeamListLanding />} /> */}
       <Route path="/leaderboard" element={<ProtectedRoute allowedRoles={['admin', 'judge', 'participant']}><LeaderBoardLanding /></ProtectedRoute>} />
